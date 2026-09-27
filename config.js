@@ -1,5 +1,5 @@
 module.exports = {
-    GROUP_JID: '120363409361900620@g.us',
+    GROUP_JID: '12036340936000000@g.us',
     NEWSLETTER_JID: '120363427092431731@newsletter',
     NEWSLETTER_LINK: 'https://whatsapp.com/channel/120363427092431731',
     MOROCCO_PREFIX: '212',

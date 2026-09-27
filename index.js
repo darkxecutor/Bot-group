@@ -136,7 +136,6 @@ async function generateWelcomeImage(profilePicUrl, memberName) {
             }
         }
 
-        // إلا ما كانش، استعمل zoro.png
         if (!avatarBuffer) {
             const zoroPath = findFile('zoro.png');
             if (zoroPath) {
@@ -198,6 +197,82 @@ async function sendWarning(sock, participant, count) {
     await sock.sendMessage(config.GROUP_JID, { text: msg, mentions: [participant] });
 }
 
+// ===== إرسال معلومات المطور =====
+async function sendDeveloperInfo(sock, chatId, message) {
+    try {
+        // ===== نص معلومات المطور =====
+        const devText =
+            `🎃 *Name:* Jawad\n\n` +
+            `👤 *Surname:* Darkxecutor\n\n` +
+            `🖇️ *Bot repository link:*\nhttps://github.com/darkxecutor/Bot-group.git\n\n` +
+            `🕸️ *YouTube:*\nhttps://www.youtube.com/@jawad_darkxecutor`;
+
+        // ===== contextInfo من القناة =====
+        const contextInfo = {
+            forwardingScore: 1,
+            isForwarded: true,
+            forwardedNewsletterMessageInfo: {
+                newsletterJid: NEWSLETTER_JID,
+                newsletterName: NEWSLETTER_NAME,
+                serverMessageId: -1
+            }
+        };
+
+        // ===== 1. إرسال صورة zoro.png مع النص =====
+        const zoroPath = findFile('zoro.png');
+        if (zoroPath) {
+            const zoroBuffer = fs.readFileSync(zoroPath);
+            await sock.sendMessage(chatId, {
+                image: zoroBuffer,
+                caption: devText,
+                contextInfo: contextInfo
+            }, { quoted: message });
+            console.log('✅ Developer info sent with zoro.png');
+        } else {
+            // إلا ما كانش zoro.png → نص فقط
+            await sock.sendMessage(chatId, {
+                text: devText,
+                contextInfo: contextInfo
+            }, { quoted: message });
+            console.log('⚠️ zoro.png not found — sent text only');
+        }
+
+        // ===== 2. إرسال جهة اتصال المطور =====
+        await sock.sendMessage(chatId, {
+            contacts: {
+                displayName: 'Jawad (Developer)',
+                contacts: [
+                    {
+                        vcard: `BEGIN:VCARD
+VERSION:3.0
+FN:Jawad (Developer)
+N:Jawad;Darkxecutor;;;
+TEL;type=CELL;type=VOICE;waid=212675894174:+212 675-894174
+END:VCARD`
+                    }
+                ]
+            },
+            contextInfo: contextInfo
+        }, { quoted: message });
+        console.log('✅ Developer contact sent');
+
+        // ===== 3. Reaction =====
+        try {
+            await sock.sendMessage(chatId, {
+                react: {
+                    text: '👨🏼‍💻',
+                    key: message.key
+                }
+            });
+        } catch (e) {
+            console.log('⚠️ Could not react:', e.message);
+        }
+
+    } catch (error) {
+        console.error('❌ Developer command error:', error);
+    }
+}
+
 // ===== قائمة الأوامر المعروفة =====
 const KNOWN_COMMANDS = [
     'طرد', 'تحذير', 'تحذيرات', 'ترحيب', 'تفعيل الترحيب', 'تعطيل الترحيب',
@@ -216,12 +291,11 @@ function buildWelcomeText(phoneNumber) {
     );
 }
 
-// ===== إرسال الترحيب (مع contextInfo من القناة) =====
+// ===== إرسال الترحيب =====
 async function sendWelcome(sock, participant, img) {
     const phoneNumber = participant.split('@')[0];
     const welcomeText = buildWelcomeText(phoneNumber);
 
-    // ===== contextInfo من القناة =====
     const contextInfo = {
         forwardingScore: 1,
         isForwarded: true,
@@ -372,7 +446,7 @@ async function startBot() {
             const cmdLower = text.toLowerCase();
             const admin = await isAdmin(sock, from, sender);
 
-            // ===== أوامر القائمة (helpCommand) =====
+            // ===== أوامر القائمة =====
             if (cmdLower === 'بوت' || cmdLower === 'أوامر' || cmdLower === 'اوامر'
                 || cmdLower === 'menu' || cmdLower === 'قائمة'
                 || cmdLower === 'help' || cmdLower === 'مساعدة'
@@ -383,22 +457,7 @@ async function startBot() {
 
             // ===== Developer =====
             if (cmdLower === 'developer') {
-                await sock.sendMessage(from, {
-                    text:
-                        `*👨🏼‍💻 Developer Info*\n\n` +
-                        `*• Name:* Speaking in English Bot\n` +
-                        `*• Version:* 1.0.1\n` +
-                        `*• Newsletter:* ${NEWSLETTER_NAME}`,
-                    contextInfo: {
-                        forwardingScore: 1,
-                        isForwarded: true,
-                        forwardedNewsletterMessageInfo: {
-                            newsletterJid: NEWSLETTER_JID,
-                            newsletterName: NEWSLETTER_NAME,
-                            serverMessageId: -1
-                        }
-                    }
-                });
+                await sendDeveloperInfo(sock, from, msg);
                 return;
             }
 

@@ -1,0 +1,18 @@
+{
+  "name": "whatsapp-group-bot",
+  "version": "1.0.0",
+  "description": "WhatsApp group bot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "@whiskeysockets/baileys": "^6.7.9",
+    "node-cron": "^3.0.3",
+    "pino": "^9.5.0",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "sharp": "^0.33.5"
+  }
+}
